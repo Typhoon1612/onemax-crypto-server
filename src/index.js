@@ -8,7 +8,21 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(cors()); // uncomment if calling from the browser
+
+// allow your prod frontend later (replace with your real domain)
+const allowed = (process.env.ALLOWED_ORIGINS || "").split(",").filter(Boolean);
+
+// Cors middleware
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin || allowed.length === 0 || allowed.includes(origin)) return cb(null, true);
+    cb(new Error("Not allowed by CORS"));
+  },
+  credentials: true
+}));
+
+// a simple route so Render can test the app
+app.get("/health", (_req, res) => res.json({ ok: true }));
 
 const CMC = axios.create({
   baseURL: "https://pro-api.coinmarketcap.com",
